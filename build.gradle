@@ -1,0 +1,56 @@
+plugins {
+    id 'org.springframework.boot' version '2.4.4'
+    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+    id 'java'
+}
+
+group = 'com.cass'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '11'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.jetbrains:annotations:20.1.0'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+task saveRunTimeDependencies(type: Copy) {
+    description = 'Save runtime dependencies'
+    FileCollection runtime = sourceSets.main.runtimeClasspath
+    from(runtime) {
+        include '*.jar'
+    }
+    into 'run/libs'
+}
+
+task saveProjectJARs(type: Copy) {
+    description = 'Save Project JAR'
+    FileCollection projectJARs = files("$buildDir/libs");
+    from(projectJARs) {
+        include '*.jar'
+    }
+    into 'run/libs'
+}
+
+task buildDistributable(type: GradleBuild) {
+    description = 'Build project distributable'
+    tasks = ['saveRunTimeDependencies', 'saveProjectJARs']
+}
+
+task rebuild(type: GradleBuild) {
+    description = 'Rebuild entire project without tests'
+    tasks = ['clean', 'bootJar', 'buildDistributable']
+}
+
+task rebuildtest(type: GradleBuild) {
+    description = 'Rebuild entire project without tests'
+    tasks = ['clean', 'bootJar', 'buildDistributable', 'test']
+}
