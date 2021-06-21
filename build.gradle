@@ -1,3 +1,6 @@
+import java.text.SimpleDateFormat
+
+
 plugins {
     id 'org.springframework.boot' version '2.4.4'
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
@@ -12,6 +15,20 @@ repositories {
     mavenCentral()
 }
 
+// ------------------------------------------------------
+
+String cassDir = "E:/carolinaadvancedsoftware"
+
+String projectName = 'cass-secrets'
+String projectDir = cassDir + "/" + projectName
+
+String runDir = "${projectDir}/run"
+
+String jarVersion = version
+String jarVersionName = projectName + '-' + jarVersion
+
+// ------------------------------------------------------
+
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'org.jetbrains:annotations:20.1.0'
@@ -22,35 +39,77 @@ test {
     useJUnitPlatform()
 }
 
-task saveRunTimeDependencies(type: Copy) {
-    description = 'Save runtime dependencies'
-    FileCollection runtime = sourceSets.main.runtimeClasspath
-    from(runtime) {
-        include '*.jar'
+
+// ------------------------------------------------------
+
+jar {
+    enabled = true
+
+    manifest {
+        attributes (
+            'Built-By': '(c) 2021 Carolina Advanced Software Solutions, Inc.',
+            'Build-Timestamp': new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()),
+            'Build-Revision' : jarVersionName,
+            'Created-By'     : "Gradle ${gradle.gradleVersion}",
+            'Build-Jdk'      : "${System.properties['java.version']} (${System.properties['java.vendor']} ${System.properties['java.vm.version']})",
+            'Build-OS'       : "${System.properties['os.name']} ${System.properties['os.arch']} ${System.properties['os.version']}"
+        )
     }
-    into 'run/libs'
 }
+
+bootJar {
+    classifier = 'boot'
+
+    manifest {
+        attributes (
+                'Built-By': '(c) 2021 Carolina Advanced Software Solutions, Inc.',
+                'Build-Timestamp': new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()),
+                'Build-Revision' : jarVersionName,
+                'Created-By'     : "Gradle ${gradle.gradleVersion}",
+                'Build-Jdk'      : "${System.properties['java.version']} (${System.properties['java.vendor']} ${System.properties['java.vm.version']})",
+                'Build-OS'       : "${System.properties['os.name']} ${System.properties['os.arch']} ${System.properties['os.version']}"
+        )
+    }
+}
+
+clean {
+    clean {
+        description = 'Clean project'
+
+        delete project.buildDir
+        delete "${runDir}/secrets"
+        delete "${runDir}/keys"
+        delete "${runDir}/libs"
+
+        doLast {
+            mkdir "${runDir}/secrets"
+            mkdir "${runDir}/keys"
+            mkdir "${runDir}/libs"
+        }
+    }
+}
+
 
 task saveProjectJARs(type: Copy) {
     description = 'Save Project JAR'
     FileCollection projectJARs = files("$buildDir/libs");
     from(projectJARs) {
-        include '*.jar'
+        include "*.jar"
     }
     into 'run/libs'
 }
 
 task buildDistributable(type: GradleBuild) {
     description = 'Build project distributable'
-    tasks = ['saveRunTimeDependencies', 'saveProjectJARs']
+    tasks = ['saveProjectJARs']
 }
 
 task rebuild(type: GradleBuild) {
     description = 'Rebuild entire project without tests'
-    tasks = ['clean', 'bootJar', 'buildDistributable']
+    tasks = ['clean', 'bootJar', 'jar', 'buildDistributable']
 }
 
 task rebuildtest(type: GradleBuild) {
     description = 'Rebuild entire project without tests'
-    tasks = ['clean', 'bootJar', 'buildDistributable', 'test']
+    tasks = ['clean', 'bootJar', 'jar', 'buildDistributable', 'test']
 }

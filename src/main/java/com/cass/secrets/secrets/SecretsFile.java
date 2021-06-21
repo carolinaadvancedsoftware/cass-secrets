@@ -7,19 +7,15 @@ import java.security.InvalidKeyException;
 
 public class SecretsFile implements Serializable {
     private static final long serialVersionUID = 1L;
-    private byte[] encodedPrivateKey;
     private String dbPassword;
 
-    public SecretsFile(byte[] encodedPrivateKey) {
-
-        this.encodedPrivateKey = encodedPrivateKey;
-    }
+    public SecretsFile() {}
 
     public String getDbPassword() {
         return this.dbPassword;
     }
 
-    public void setDbPassword(String dbPassword) throws BadPaddingException, InvalidKeyException, IllegalBlockSizeException {
+    public void setDbPassword(String dbPassword) {
         this.dbPassword = dbPassword;
     }
 }
